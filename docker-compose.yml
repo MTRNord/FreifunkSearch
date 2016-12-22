@@ -34,7 +34,7 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - esdata1:/usr/share/elasticsearch/data
+      - ./data/1:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
     networks:
@@ -62,16 +62,10 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - esdata2:/usr/share/elasticsearch/data
+      - ./data/2:/usr/share/elasticsearch/data
     networks:
       - esnet
 
 networks:
   esnet:
     driver: bridge
-
-volumes:
-  esdata1:
-    driver: local
-  esdata2:
-    driver: local
