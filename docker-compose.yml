@@ -1,0 +1,77 @@
+version: '2'
+services:
+  nginx:
+    container_name: ff-sl_web
+    image: nginx
+    volumes:
+      - ./app:/var/www
+      - ./default:/etc/nginx/conf.d/default
+    ports:
+      - "80:80"
+    environment:
+     - NGINX_HOST=localhost
+     - NGINX_PORT=80
+    command: /bin/bash -c "envsubst < /etc/nginx/conf.d/default > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+  ff-sl1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.1.1
+    container_name: ff-sl1
+    environment:
+      - cluster.name=ff-sl
+      - bootstrap.memory_lock=true
+      - http.cors.enabled=true
+      - http.cors.allow-origin=/.*/
+      - http.cors.allow-credentials=true
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    mem_limit: 1g
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - esnet
+  ff-sl2:
+    container_name: ff-sl2
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.1.1
+    environment:
+      - xpack.security.enabled=false
+      - http.cors.enabled=true
+      - http.cors.allow-origin=/.*/                            
+      - http.cors.allow-credentials=true
+      - cluster.name=ff-sl
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.zen.ping.unicast.hosts=ff-sl1"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    mem_limit: 1g
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - esdata2:/usr/share/elasticsearch/data
+    networks:
+      - esnet
+
+networks:
+  esnet:
+    driver: bridge
+
+volumes:
+  esdata1:
+    driver: local
+  esdata2:
+    driver: local
